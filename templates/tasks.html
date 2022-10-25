@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+
+{% block script %}
+    <script src="{{ url_for('static', filename='js/main.tasks.js') }}"></script>
+{% endblock %}
+
+{% block style %}
+    <style>
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1>Tasks</h1>
+    {% set table_name = "tasks" %}
+    <div class="table-responsive text-nowrap" id="table-{{ table_name }}-container">
+        <table class="table table-bordered display caption-top table-fixed" id="table-{{ table_name }}">
+            <thead>
+                <tr>
+                    {% for cname in ["", "Name", "type", "json"] %}
+                    <th class="text-nowrap" scope="col">{{ cname }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in models.db.get_all() %}
+                <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.version_id }}</td>
+                    <td>{{ row.type }}</td>
+                    <td>{{ row.json }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+
+
+
+
+{% endblock %}

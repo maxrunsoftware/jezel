@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+    <h1>HomeAPI</h1>
+    <ul>
+        <li><a href="{{ url_for('.index') }}">Home</a></li>
+        <li><a href="{{ url_for('.database') }}">Database</a></li>
+        <li><a href="{{ url_for('.login') }}">Login</a></li>
+        <li><a href="{{ url_for('.logout') }}">Logout</a></li>
+        <li><a href="{{ url_for('.info') }}">Info</a></li>
+    </ul>
+{% endblock %}
