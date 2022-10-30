@@ -232,9 +232,9 @@ class Task(JsonItemBase):
         o.modified_by = o.created_by if random_bool() else random_pick(rnames)
         o.name = random_adjective() + " " + random_noun()
         o.is_active = random_pick([True, True, False])
-        for _ in range(0, random_int(max=5)):
+        for _ in range(0 if random_bool(25) else 1 , random_int(max=5)):
             o.tags[random_noun()] = random_verb()
-        for _ in range(0, random_int(max=2)):
+        for _ in range(0, random_int(max=5)):
             o.schedules.append(TaskSchedule.create_random())
         for i in range(0, random_int(max=5)):
             o.actions[i + 1] = TaskAction.create_random()
@@ -362,7 +362,7 @@ class TaskExecution(JsonItemBase):
     @classmethod
     def create_random(cls, task: Task):
         # @formatter:off
-        if task.actions is None or len(task.actions): return None
+        if task.actions is None or len(task.actions) < 1: return None
         o = cls()
         st = o.status = random_pick(TaskExecutionStatus)
         statuses = [TaskExecutionStatus(s) for s in ["created", "validating", "queued", "running", "completed"]]
@@ -393,6 +393,7 @@ class TaskExecution(JsonItemBase):
             o.triggered_manually_on = random_datetime(min=task.modified_on, max=o.created_on)
             o.triggered_manually_by = random_name()
 
+        o.task = task
         return o
         # @formatter:on
 
@@ -522,14 +523,17 @@ class ModelDatabase:
         for _ in range(0, task_num):
             t = Task.create_random()
             self.save(t)
+            print(f"Task(id={t.id}, schedules={len(t.schedules)}, actions={len(t.actions)})")
             task_execution_count = random_int(1, 10)
-            if random_bool(20):
-                task_execution_count = 0
+            # if random_bool(20): task_execution_count = 0
             # task_execution_count = 100
-            for _ in range(0, task_execution_count):
+            for _ in range(1, task_execution_count):
                 te = TaskExecution.create_random(t)
                 if te is not None:
+                    print(f"Created task execution for Task(id={t.id})")
                     self.save(te)
+                else:
+                    print(f"Skipped task execution for Task(id={t.id})")
 
 
 _model_database: ModelDatabase | None = None

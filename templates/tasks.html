@@ -1,40 +1,89 @@
 {% extends 'layout.html' %}
 
 {% block script %}
-    <script src="{{ url_for('static', filename='js/main.tasks.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.tasks.js') }}"></script>
 {% endblock %}
 
 {% block style %}
-    <style>
+  <style>
+      .local-action-button {
+          width: 100%;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
 
-    </style>
+      }
+
+      .local-action-col {
+          padding-left: 0.25em !important;
+          padding-right: 0.25em !important;
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+      }
+
+      .local-action-td {
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+      }
+
+      .local-active-td {
+          padding-left: 0.25em !important;
+          padding-right: 0.25em !important;
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+      }
+  </style>
 {% endblock %}
 
 {% block content %}
-    <h1>Tasks</h1>
-    {% set table_name = "tasks" %}
-    <div class="table-responsive text-nowrap" id="table-{{ table_name }}-container">
-        <table class="table table-bordered display caption-top table-fixed" id="table-{{ table_name }}">
-            <thead>
-                <tr>
-                    {% for cname in ["", "Name", "type", "json"] %}
-                    <th class="text-nowrap" scope="col">{{ cname }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in models.db.get_all() %}
-                <tr>
-                    <td>{{ row.id }}</td>
-                    <td>{{ row.version_id }}</td>
-                    <td>{{ row.type }}</td>
-                    <td>{{ row.json }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+  <h1>Tasks</h1>
+  {% set table_name = "tasks" %}
+  <div class="table-responsive text-nowrap" id="table-{{ table_name }}-container">
+    <table class="table table-bordered display caption-top table-fixed" id="table-{{ table_name }}">
+      <thead>
+      <tr>
+        <th class="text-nowrap text-center" -scope="col">Actions</th>
+        <th class="text-nowrap text-center" style="width: 1%;" scope="col"></th>
+        <th class="text-nowrap text-center" scope="col">Name</th>
+        <th class="text-nowrap text-center" scope="col">Last Execution</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for task in tasks %}
+        <tr>
 
-        </table>
-    </div>
+          <td class="local-action-td">
+            <div class="container">
+              <div class="row">
+                <div class="col local-action-col">
+                  <button id="power_btn_{{ vunique_id }}" class="btn bi-trash3 btn-danger local-action-button" data-local-state="1" onclick="" type="button">Delete</button>
+                </div>
+                <div class="col local-action-col">
+                  <button id="power_btn_{{ vunique_id }}" class="btn bi-pencil-square btn-primary local-action-button" data-local-state="1" onclick="" type="button">Edit</button>
+                </div>
+              </div>
+            </div>
+          </td>
+
+          <td class="local-active-td">
+            <div class="container">
+              <div class="row">
+                <div class="col text-center" style="padding-left: 0!important; padding-right: 0!important;">
+                  {% set active_class = "bi-lightbulb-off-fill text-secondary" if task.is_active else "bi-lightbulb-fill text-warning" %}
+                  <i class="fs-3 {{ active_class }}"></i>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td>{{ task.name }}</td>
+          <td>{{ task.last_execution.created_on }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+
+    </table>
+  </div>
 
 
 

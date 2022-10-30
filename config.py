@@ -91,10 +91,11 @@ class ConfigMeta(type):
     @property
     def DATABASE_TABLE(cls) -> str:
         # return _get_str("DATABASE_URI", "sqlite:///:memory:")
-        return _get_str("DATABASE_TABLE", PROJECT_NAME.casefold() + "_data")
+        return _get_str("DATABASE_TABLE", PROJECT_NAME.casefold())
 
 
     # endregion Common
+
 
     @property
     def ADMIN_DEFAULT_USERNAME(cls) -> str:
@@ -169,8 +170,8 @@ def init_logging():
 
     # init logging
 
-    def parse_log_level(level_name: str ) -> int | None:
-        level_name = trim(xstr(Config.LOG_LEVEL))
+    def parse_log_level(level_name: str) -> int | None:
+        level_name = trim(xstr(level_name))
         if level_name is None:
             level_name = "DEBUG" if Config.DEBUG else "INFO"
         level_int = logging.getLevelName(level_name)
@@ -193,8 +194,10 @@ def init_logging():
     ln_sqlalchemy = trim(xstr(Config.LOG_LEVEL_SQLALCHEMY))
     if ln_sqlalchemy is None:
         li_sqlalchemy = li
+        log.debug(f"No value provided for sqlalchemy so defaulting to {ln}")
     else:
         li_sqlalchemy = parse_log_level(ln_sqlalchemy)
+        log.debug(f"Parsed sqlalchemy logging level '{ln_sqlalchemy}' to {li_sqlalchemy}")
         if li_sqlalchemy is None:
             log.warning(f"sqlalchemy log level {ln_sqlalchemy} is invalid, defaulting to {ln}")
             li_sqlalchemy = li

@@ -111,11 +111,11 @@ class Database:
     @staticmethod
     def _insert(cls, data_type: str, data_json: str, session: Session) -> Tuple[int, int]:
         o = cls()
-        o.data_type = data_type
+        o.type = data_type
         o.data_json = data_json
         session.add(o)
         session.flush()
-        return o.data_id, o.data_version_id
+        return o.id, o.version_id
 
     def insert(self, data_type: str, data_json: str, session: Session = None) -> Tuple[int, int]:
         log.debug(f"Inserting (data_type={data_type}, data_json={len(data_json)})")

@@ -232,3 +232,37 @@ def database():
     return render(render_template(
         'database.html',
     ))
+
+@bp.route('/tasks')
+@flask_login.login_required
+def tasks():
+    db = get_model_database()
+    lis = []
+    task_list = db.get_tasks()
+    task_execution_list = db.get_task_executions()
+
+    def get_last_execution(task_id):
+        last_execution = None
+        for task_execution in task_execution_list:
+            if task_execution.task is None: continue
+            if task_execution.task.id != task_id: continue
+
+            if last_execution is None:
+                last_execution = task_execution
+            else:
+                if last_execution.created_on is None:
+                    last_execution = task_execution
+                elif task_execution.created_on is None:
+                    continue
+                elif task_execution.created_on > last_execution.created_on:
+                    last_execution = task_execution
+        return last_execution
+
+    for t in task_list:
+        lis.append(t)
+        t.last_execution = get_last_execution(t.id)
+
+    return render(render_template(
+        'tasks.html',
+        tasks=lis,
+    ))
