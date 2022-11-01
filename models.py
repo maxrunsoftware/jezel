@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import time
-from dataclasses import field
+from dataclasses import dataclass, field
 
 from database import Database, get_database
 from utils import *
@@ -459,7 +459,7 @@ class ModelDatabase:
         raise ValueError(f"Object {obj} of type '{type(obj).__name__}' is not valid, valid types are " + str([o.__name__ for o in self._VALID_TYPES]))
 
     def _construct_load_obj(self, row):
-        t = self._VALID_TYPES_DICT[row.type]
+        t = self._VALID_TYPES_DICT[row.dsmall]
         o = t()
         json_objs = json2obj(row.json)
         o.json_import(json_objs)

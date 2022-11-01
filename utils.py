@@ -22,12 +22,12 @@ import random
 import sys
 import threading
 import time
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod, abstractstaticmethod
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from itertools import chain, combinations
-from typing import Any, Callable, Dict, Generator, Generic, Iterable, List, Mapping, MutableMapping, Sequence, Set, Tuple, TypeVar
+from typing import Any, Callable, Dict, Generator, Generic, Iterable, List, Mapping, MutableMapping, Reversible, Sequence, Set, Tuple, TypeVar
 from uuid import UUID
 
 from ruamel.yaml import YAML
@@ -126,10 +126,40 @@ def chunks(lst: List[T], items_per_chunk: int) -> Generator[List[T]]:
         yield lst[i:i + items_per_chunk]
 
 
+def int_commas(value: int) -> str:
+    return "{:,}".format(value)
+
+def int_prefix(value: int, length: int) -> str:
+    return str(value).zfill(length)
+
+
+# region binary
+
+def bools2int(bools: List[bool]) -> int:
+    """
+    Returns binary conversion of list of bools to integer
+    https://stackoverflow.com/a/27165675
+    """
+    if bools is None or len(bools) == 0: return 0
+    return sum(2 ** i for i, v in enumerate(reversed(bools)) if v)
+
+def int2bools(n, total_length: int):
+    """
+    Converts an int value to a list of bools
+    https://stackoverflow.com/a/10322018
+    """
+
+    lst = [True if digit == '1' else False for digit in bin(n)[2:]]
+    return [False] * (total_length - len(lst)) + lst
+
+
+# endregion binary
+
 class Object:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+
 
 # region parse
 
@@ -611,6 +641,7 @@ class DictStrBase(MutableMapping, metaclass=ABCMeta):
         self._data = dict()
         if data is None: data = {}
         self.update(data, **kwargs)
+
 
     @staticmethod
     @abstractmethod
