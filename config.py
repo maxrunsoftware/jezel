@@ -164,7 +164,7 @@ def init_logging():
     global _LOGGING_INITIALIZED
     with _LOGGING_INITIALIZED_LOCK:
         if _LOGGING_INITIALIZED:
-            print_error("Error: Logging already initialized")
+            print_error("Warning: config.init_logging() -> Logging already initialized")
             return None
         _LOGGING_INITIALIZED = True
 

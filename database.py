@@ -20,7 +20,7 @@ from enum import auto, Flag
 from typing import final, NamedTuple
 
 import sqlalchemy
-from sqlalchemy import bindparam, BindParameter, Column, Connection, create_engine, Index, Integer, MetaData, null, PrimaryKeyConstraint, Select, StaticPool, String, Text
+from sqlalchemy import bindparam, BindParameter, Column, Connection, create_engine, Index, Integer, MetaData, null, or_, PrimaryKeyConstraint, Select, StaticPool, String, Text
 from sqlalchemy.sql.functions import count
 
 from utils import *
@@ -289,21 +289,40 @@ class Database:
 class TableDetailColumn(NamedTuple):
     col: Column
     name: str
-    bp_where: BindParameter
-    bp_where_name: str
-    bp_value: BindParameter
-    bp_value_name: str
+    bp_wheres: Tuple
+    bp_wheres_name: Tuple[str]
+    bp_values: Tuple
+    bp_values_name: Tuple[str]
 
     @classmethod
     def create(cls, col: Column):
+        bp_parts = [f"_{col.name}_{i}" for i in range(255)]
+        bp_wheres_name = [f"w{p}" for p in bp_parts]
+        bp_wheres = [bindparam(p) for p in bp_wheres_name]
+        bp_values_name = [f"v{p}" for p in bp_parts]
+        bp_values = [bindparam(p) for p in bp_values_name]
+
         return cls(
             col=col,
             name=col.name,
-            bp_where=bindparam("w_" + col.name),
-            bp_where_name="w_" + col.name,
-            bp_value=bindparam("v_" + col.name),
-            bp_value_name="v_" + col.name,
+            bp_wheres=tuple(bp_wheres),
+            bp_wheres_name=tuple(bp_wheres_name),
+            bp_values=tuple(bp_values),
+            bp_values_name=tuple(bp_values_name),
         )
+
+    @property
+    def bp_where(self) -> BindParameter: return self.bp_wheres[0]
+
+    @property
+    def bp_where_name(self) -> str: return self.bp_wheres_name[0]
+
+    @property
+    def bp_value(self) -> BindParameter: return self.bp_values[0]
+
+    @property
+    def bp_value_name(self) -> str: return self.bp_values_name[0]
+
 
 
 class TableDetail(NamedTuple):
@@ -370,6 +389,10 @@ class TableMixin(ABC):
     def _table_stmt_cache(self) -> _StatementCache:
         raise NotImplementedError
 
+    @staticmethod
+    def _check_is_sequence(vals):
+        if not isinstance(vals, Sequence):
+            raise f"Value [{vals}] is not a Sequence"
 
 class TableSelectMixin(TableMixin, ABC):
     _log_select = log.getChild("select")
@@ -439,11 +462,29 @@ class TableSelectMixin(TableMixin, ABC):
         result = c.execute(stmt).scalars().all()
         return {str(x) for x in result}
 
+    def select_where_dsmalls(self, dsmalls: Iterable[str], cols: RowColumns = RowColumns.ALL, c: Connection = None) -> List[Row]:
+        dsmalls = list(set([x for x in dsmalls if x is not None]))
+        t, sc = self._table_detail, self._table_stmt_cache
+
+        def where(stmt: Select):
+            d = {}
+            or_parts = []
+            for i, dsmall in enumerate(dsmalls):
+                or_parts.append((t.col_dsmall.col == t.col_dsmall.bp_wheres[i]))
+                d[t.col_dsmall.bp_wheres_name[i]] = dsmall
+
+            stmt = stmt.where(or_(False, *or_parts))
+            return stmt, d
+
+        return self.select(cols=cols, where=where, c=c)
+
+
 
 class TableInsertMixin(TableMixin, ABC):
     _log_insert = log.getChild("insert")
 
-    def insert(self, rows: List[Row], c: Connection = None) -> List[Row]:
+    def insert(self, rows: Sequence[Row], c: Connection = None) -> List[Row]:
+        self._check_is_sequence(rows)
         if c is None:
             with self._begin_tran() as c:
                 r = self.insert(rows=rows, c=c)
@@ -513,7 +554,8 @@ class TableDeleteMixin(TableMixin, ABC):
     def select_single(self, cols: RowColumns, id: int, c: Connection = None) -> Row | None:
         raise NotImplementedError
 
-    def delete(self, rows: List[Row], c: Connection = None):
+    def delete(self, rows: Sequence[Row], c: Connection = None):
+        self._check_is_sequence(rows)
         if c is None:
             with self._begin_tran() as c:
                 r = self.delete(rows, c)
@@ -546,7 +588,8 @@ class TableDeleteMixin(TableMixin, ABC):
             check_delete_failed(result, row)
             # result.close()
 
-    def delete_dsmalls(self, types: List[str], c: Connection = None) -> int:
+    def delete_dsmalls(self, types: Sequence[str], c: Connection = None) -> int:
+        self._check_is_sequence(types)
         if c is None:
             with self._begin_tran() as c:
                 r = self.delete_dsmalls(types=types, c=c)
@@ -586,7 +629,8 @@ class TableUpdateMixin(TableMixin, ABC):
     def select_single(self, cols: RowColumns, id: int, c: Connection = None) -> Row | None:
         raise NotImplementedError
 
-    def update(self, rows: List[Row], c: Connection = None, populate_missing_fields=True) -> List[Row]:
+    def update(self, rows: Sequence[Row], c: Connection = None, populate_missing_fields=True) -> List[Row]:
+        self._check_is_sequence(rows)
         if c is None:
             with self._begin_tran() as c:
                 r = self.update(rows=rows, c=c, populate_missing_fields=populate_missing_fields)

@@ -11,139 +11,36 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import logging
 import time
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import List, Mapping, MutableMapping
 
-from database import Database, get_database
-from utils import *
+from database import Database
+from database_object import SerializableBase, SerializableReader, SerializableWriter
+from utils import datetime_now_utc, DictStrCasefold, random_adjective, random_bool, random_datetime, random_int, random_names, random_noun, random_pick, random_verb, trim, xstr
 
 log = logging.getLogger(__name__)
 
 
-def _json_get(json: Mapping[str, Any | None], key: str) -> Any | None:
-    v = json.get(key)
-    if v is not None: return v
-
-    key = trim(key)
-    if key is None:
-        raise ValueError("Key cannot be empty")
-    v = json.get(key)
-    if v is not None: return v
-
-    key_camel = str2camel(key)
-    v = json.get(key_camel)
-    if v is not None: return v
-
-    key_snake = str2snake(key)
-    v = json.get(key_snake)
-    if v is not None: return v
-
-    key_casefold = key.casefold()
-    v = json.get(key_casefold)
-    if v is not None: return v
-
-    return None
-
-
-def _json_get_str(json: Mapping[str, Any | None], key: str, is_trimmed=True) -> str | None:
-    v = _json_get(json, key)
-    if v is None: return None
-    v = str(v)
-    if is_trimmed: v = trim(v)
-    return v
-
-
-def _json_get_by_type(json: Mapping[str, Any | None], key: str, typ: type) -> Any | None:
-    if typ == str:
-        return _json_get_str(json, key)
-    elif typ == datetime:
-        return datetime_parse_none(_json_get_str(json, key), tz=timezone.utc)
-    elif typ == int:
-        return int_parse_none(_json_get_str(json, key))
-    elif typ == float:
-        return float_parse_none(_json_get_str(json, key))
-    elif typ == bool:
-        return bool_parse_none(_json_get_str(json, key))
-    elif typ == UUID:
-        return uuid_parse_none(_json_get_str(json, key))
-    elif typ == list or typ == List:
-        v = _json_get(json, key)
-        result = []
-        if v is None: return result
-        for item in v:
-            if item is not None:
-                result.append(item)
-        return result
-
-    elif typ == dict or typ == Mapping or typ == MutableMapping:
-        v = _json_get(json, key)
-        result = dict()
-        if v is None: return result
-        for key, value in v.items():
-            key = trim(xstr(key))
-            if key is not None and value is not None: result[key] = value
-        return result
-
-    elif issubclass(typ, Enum):
-        v = _json_get_str(json, key)
-        if v is None: return None
-        return typ(v)
-
-    elif issubclass(typ, JsonItemBase):
-        v = _json_get(json, key)
-        if v is None: return None
-        o = typ()
-        o.json_import(v)
-        return o
-
-    else:
-        raise NotImplementedError(f"Type '{typ.__name__}' is not implemented")
-
-
-def _json_get_assign_attributes(json: Mapping[str, Any | None], instance: Any, **kwargs):
-    for attribute_name, attribute_type in kwargs.items():
-        if not hasattr(instance, attribute_name):
-            raise ValueError(f"Instance {type(instance).__name__} does not have attribute {attribute_name}")
-        v = _json_get_by_type(json, attribute_name, attribute_type)
-        setattr(instance, attribute_name, v)
-
-
-def _json_put(json: MutableMapping[str, Any | None], key: str, value: Any | None):
-    if value is None: return
-    if "_" in key: key = str2camel(key)
-    if isinstance(value, datetime):
-        if value.tzinfo is None:
-            value = value.replace(tzinfo=timezone.utc)
-        json[key] = value.isoformat()
-    elif isinstance(value, int):
-        json[key] = value
-    elif isinstance(value, float):
-        json[key] = value
-    elif isinstance(value, UUID):
-        json[key] = value.hex
-    elif isinstance(value, str):
-        json[key] = value
-    elif isinstance(value, bool):
-        json[key] = str(value).lower()
-    elif issubclass(type(value), Enum):
-        json[key] = str(value)
-    elif issubclass(type(value), JsonItemBase):
-        v = value.json_export_obj()
-        if v is not None:
-            json[key] = v
-
-    else:
-        json[key] = value
+class ModelBase(SerializableBase, ABC):
+    @classmethod
+    @abstractmethod
+    def create_random(cls): raise NotImplementedError
 
 
 @dataclass
-class JsonItemBase:
-    pass
-
-
-@dataclass
-class TaskAction(JsonItemBase):
+class TaskAction(ModelBase):
     action: str | None = None
+
+    def serialize_write(self, w: SerializableWriter):
+        w.put("action", self.action)
+
+    def deserialize_read(self, r: SerializableReader):
+        self.action = r.get("action", str)
 
     @classmethod
     def create_random(cls):
@@ -151,28 +48,19 @@ class TaskAction(JsonItemBase):
         o.action = random_pick(["sql", "sftp", "ftp", "ftps", "zip", "email"])
         return o
 
-    def json_import(self, json: Mapping[str, Any | None]):
-        self.action = _json_get_by_type(json, "action", str)
-
-    def json_export_obj(self) -> Mapping[str, Any] | None:
-        d = dict()
-        o = trim(xstr(self.action))
-        if o is None: return None
-        _json_put(d, "action", o)
-
-    def _clean(self):
-        self.action = trim(xstr(self.action))
-
-    @property
-    def json_is_valid(self):
-        self._clean()
-        return self.action is not None
-
 
 @dataclass
-class TaskSchedule(JsonItemBase):
+class TaskSchedule(ModelBase):
     cron_str: str | None = None
     is_active: bool = True
+
+    def serialize_write(self, w: SerializableWriter):
+        w.put("cron_str", self.cron_str)
+        w.put("is_active", self.is_active)
+
+    def deserialize_read(self, r: SerializableReader):
+        self.cron_str = r.get("cron_str", str)
+        self.is_active = r.get("is_active", bool, True)
 
     @classmethod
     def create_random(cls):
@@ -184,32 +72,13 @@ class TaskSchedule(JsonItemBase):
             "*" if random_bool() else str(random_int(min=1, max=12)),
             "*" if random_bool() else str(random_int(min=0, max=6))
         ])
-        o.is_active = random_pick([True, True, False])
+        o.is_active = random_bool(75)
         return o
-
-    def json_import(self, json: Mapping[str, Any | None]):
-        self.cron_str = _json_get_by_type(json, "cron_str", str)
-        self.is_active = _json_get_by_type(json, "is_active", bool)
-
-    def json_export_obj(self) -> Mapping[str, Any] | None:
-        d = dict()
-        cron_str_v = trim(xstr(self.cron_str))
-        if cron_str_v is None: return None
-        _json_put(d, "cron_str", cron_str_v)
-        _json_put(d, "is_active", self.is_active)
-
-    def _clean(self):
-        self.cron_str = trim(xstr(self.cron_str))
-        if self.is_active is None: self.is_active = True
-
-    @property
-    def json_is_valid(self):
-        self._clean()
-        return self.cron_str is not None
 
 
 @dataclass
-class Task(JsonItemBase):
+class Task(ModelBase):
+
     id: int | None = None
     version_id: int | None = None
     created_on: datetime | None = None
@@ -220,7 +89,38 @@ class Task(JsonItemBase):
     is_active: bool = True
     tags: MutableMapping[str, str] = field(default_factory=DictStrCasefold)
     schedules: List[TaskSchedule] = field(default_factory=list)
-    actions: MutableMapping[int, TaskAction] = field(default_factory=dict)
+    actions: List[TaskAction] = field(default_factory=dict)
+
+    def serialize_write(self, w: SerializableWriter):
+        w.put("id", self.id)
+        w.put("version_id", self.version_id)
+        w.put("created_on", self.created_on)
+        w.put("created_by", self.created_by)
+        w.put("modified_on", self.modified_on)
+        w.put("modified_by", self.modified_by)
+        w.put("name", self.name)
+        w.put("is_active", self.is_active)
+        w.put_dict_str_str("tags", self.tags)
+        w.put_list_serializable_base("schedules", self.schedules)
+        w.put_list_serializable_base("actions", self.actions)
+
+
+
+
+    def deserialize_read(self, r: SerializableReader):
+        self.id = r.get("id", int)
+        self.version_id = r.get("version_id", int)
+        self.created_on = r.get("created_on", datetime)
+        self.created_by = r.get("created_by", str)
+        self.modified_on = r.get("modified_on", datetime)
+        self.modified_by = r.get("modified_by", str)
+        self.name = r.get("name", str)
+        self.is_active = r.get("is_active", bool, True)
+        self.tags = r.get("tags", DictStrCasefold)
+        self.schedules = r.get_list_serializable_base("schedules", TaskSchedule)
+        self.actions = r.get_list_serializable_base("actions", TaskAction)
+
+
 
     @classmethod
     def create_random(cls):
@@ -232,7 +132,7 @@ class Task(JsonItemBase):
         o.modified_by = o.created_by if random_bool() else random_pick(rnames)
         o.name = random_adjective() + " " + random_noun()
         o.is_active = random_pick([True, True, False])
-        for _ in range(0 if random_bool(25) else 1 , random_int(max=5)):
+        for _ in range(0 if random_bool(25) else 1, random_int(max=5)):
             o.tags[random_noun()] = random_verb()
         for _ in range(0, random_int(max=5)):
             o.schedules.append(TaskSchedule.create_random())
@@ -240,80 +140,10 @@ class Task(JsonItemBase):
             o.actions[i + 1] = TaskAction.create_random()
         return o
 
-    def json_import(self, json: Mapping[str, Any | None]):
-        self.id = _json_get_by_type(json, "id", int)
-        self.version_id = _json_get_by_type(json, "version_id", int)
-        self.created_on = _json_get_by_type(json, "created_on", datetime)
-        self.created_by = _json_get_by_type(json, "created_by", str)
-        self.modified_on = _json_get_by_type(json, "modified_on", datetime)
-        self.modified_by = _json_get_by_type(json, "modified_by", str)
-        self.name = _json_get_by_type(json, "name", str)
-        self.is_active = _json_get_by_type(json, "is_active", bool)
 
-        self.tags = DictStrCasefold[str, str]()
-        for k, v in _json_get_by_type(json, "tags", dict).items():
-            v = trim(xstr(v))
-            if v is not None:
-                self.tags[k] = v
 
-        self.schedules = []
-        for o in _json_get_by_type(json, "schedules", list):
-            sched = TaskSchedule()
-            sched.json_import(o)
-            if sched.json_is_valid:
-                self.schedules.append(sched)
 
-        self.actions = dict()
-        for k, v in _json_get_by_type(json, "actions", dict).items():
-            action = TaskAction()
-            action.json_import(v)
-            if action.json_is_valid:
-                self.actions[int(k)] = action
 
-    def json_export_obj(self) -> Mapping[str, Any]:
-        d = dict()
-        _json_put(d, "id", self.id)
-        _json_put(d, "version_id", self.version_id)
-        _json_put(d, "created_on", self.created_on)
-        _json_put(d, "created_by", self.created_by)
-        _json_put(d, "modified_on", self.modified_on)
-        _json_put(d, "modified_by", self.modified_by)
-        _json_put(d, "name", self.name)
-        _json_put(d, "is_active", self.is_active)
-
-        tags_v = {}
-        o = self.tags
-        if o is not None:
-            for k, v in o.items():
-                k = trim(xstr(k))
-                if k is None: continue
-                v = trim(xstr(v))
-                if v is None: continue
-                tags_v[k] = v
-        _json_put(d, "tags", tags_v)
-
-        schedules_v = []
-        o = self.schedules
-        if o is not None:
-            for sched in o:
-                if sched is None: continue
-                s = sched.json_export_obj()
-                if s is None: continue
-                if len(s) < 1: continue
-                schedules_v.append(s)
-        _json_put(d, "schedules", schedules_v)
-
-        actions_v = {}
-        o = self.actions
-        if o is not None:
-            for i, action in o.items():
-                if action is None: continue
-                act = action.json_export_obj()
-                if act is None: continue
-                actions_v[i] = act
-        _json_put(d, "actions", actions_v)
-
-        return d
 
 
 class TaskExecutionStatus(str, Enum):
@@ -336,7 +166,7 @@ class TaskExecutionErrorType(str, Enum):
 
 
 @dataclass
-class TaskExecution(JsonItemBase):
+class TaskExecution(ModelBase):
     id: int | None = None
     version_id: int | None = None
     status: TaskExecutionStatus = TaskExecutionStatus.CREATED
@@ -358,6 +188,57 @@ class TaskExecution(JsonItemBase):
     triggered_manually: bool = False
     triggered_manually_on: datetime | None = None
     triggered_manually_by: str | None = None
+
+
+    def serialize_write(self, w: SerializableWriter):
+        w.put("id", self.id)
+        w.put("version_id", self.version_id)
+        w.put("created_on", self.created_on)
+        w.put("created_by", self.created_by)
+        w.put("modified_on", self.modified_on)
+        w.put("modified_by", self.modified_by)
+        w.put("name", self.name)
+        w.put("is_active", self.is_active)
+        w.put_dict_str_str("tags", self.tags)
+        w.put_list_serializable_base("schedules", self.schedules)
+        w.put_list_serializable_base("actions", self.actions)
+
+
+
+
+    def deserialize_read(self, r: SerializableReader):
+        self.id = r.get("id", int)
+        self.version_id = r.get("version_id", int)
+        self.created_on = r.get("created_on", datetime)
+        self.created_by = r.get("created_by", str)
+        self.modified_on = r.get("modified_on", datetime)
+        self.modified_by = r.get("modified_by", str)
+        self.name = r.get("name", str)
+        self.is_active = r.get("is_active", bool, True)
+        self.tags = r.get("tags", DictStrCasefold)
+        self.schedules = r.get_list_serializable_base("schedules", TaskSchedule)
+        self.actions = r.get_list_serializable_base("actions", TaskAction)
+
+        self.id = r.get("id", int)
+        self.version_id = r.get("version_id", int)
+        self.status = r.get("status", TaskExecutionStatus)
+        self.current_step = r.get("current_step", int)
+        self.created_on = r.get("created_on", datetime)
+        self.validating_on = r.get("validating_on", datetime)
+        self.queued_on = r.get("queued_on", datetime)
+        self.started_on = r.get("started_on", datetime)
+        self.completed_on = r.get("completed_on", datetime)
+        self.cancelled_on = r.get("cancelled_on", datetime)
+        self.cancelled_by = r.get("cancelled_by", str)
+        self.cancelled_step = r.get("cancelled_step", int)
+        self.error_type = r.get("error_type", TaskExecutionErrorType)
+        self.error_str = r.get("error_str", str)
+        self.error_step = r.get("error_step", int)
+        self.task = r.get("task", Task)
+        self.triggering_schedule = r.get("triggering_schedule", TaskSchedule)
+        self.triggered_manually = r.get("triggered_manually", bool)
+        self.triggered_manually_on = r.get("triggered_manually_on", datetime)
+        self.triggered_manually_by = r.get("triggered_manually_by", str)
 
     @classmethod
     def create_random(cls, task: Task):
@@ -398,26 +279,6 @@ class TaskExecution(JsonItemBase):
         # @formatter:on
 
     def json_import(self, json: Mapping[str, Any | None]):
-        self.id = _json_get_by_type(json, "id", int)
-        self.version_id = _json_get_by_type(json, "version_id", int)
-        self.status = _json_get_by_type(json, "status", TaskExecutionStatus)
-        self.current_step = _json_get_by_type(json, "current_step", int)
-        self.created_on = _json_get_by_type(json, "created_on", datetime)
-        self.validating_on = _json_get_by_type(json, "validating_on", datetime)
-        self.queued_on = _json_get_by_type(json, "queued_on", datetime)
-        self.started_on = _json_get_by_type(json, "started_on", datetime)
-        self.completed_on = _json_get_by_type(json, "completed_on", datetime)
-        self.cancelled_on = _json_get_by_type(json, "cancelled_on", datetime)
-        self.cancelled_by = _json_get_by_type(json, "cancelled_by", str)
-        self.cancelled_step = _json_get_by_type(json, "cancelled_step", int)
-        self.error_type = _json_get_by_type(json, "error_type", TaskExecutionErrorType)
-        self.error_str = _json_get_by_type(json, "error_str", str)
-        self.error_step = _json_get_by_type(json, "error_step", int)
-        self.task = _json_get_by_type(json, "task", Task)
-        self.triggering_schedule = _json_get_by_type(json, "triggering_schedule", TaskSchedule)
-        self.triggered_manually = _json_get_by_type(json, "triggered_manually", bool)
-        self.triggered_manually_on = _json_get_by_type(json, "triggered_manually_on", datetime)
-        self.triggered_manually_by = _json_get_by_type(json, "triggered_manually_by", str)
 
     def json_export_obj(self) -> Mapping[str, Any]:
         d = dict()

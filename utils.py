@@ -397,6 +397,8 @@ class JsonObjectType(Enum):
     LIST = 7
 
 
+
+
 class JsonObject:
     def __init__(self, value: Any | None):
         self._json_object_type: JsonObjectType
