@@ -216,7 +216,7 @@ def uuid_parse_none(value: Any | None) -> UUID | None:
     return UUID(value)
 
 
-# endrion parse
+# endregion parse
 
 
 # region Random
@@ -338,6 +338,13 @@ def mixin_attrset(self, cls: type, key: str, value) -> Dict[str, Any]:
 
 
 # endregion mixin
+
+
+# region hash
+
+
+
+# endregion hash
 
 
 # region serialization
