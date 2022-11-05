@@ -16,30 +16,31 @@ from __future__ import annotations
 
 import base64
 import colorsys
+import hashlib
 import json as jsn
 import logging
 import random
 import sys
 import threading
 import time
-from abc import ABC, ABCMeta, abstractmethod, abstractstaticmethod
+from abc import ABC, ABCMeta, abstractmethod
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from itertools import chain, combinations
-from typing import Any, Callable, Dict, Generator, Generic, Iterable, List, Mapping, MutableMapping, Reversible, Sequence, Set, Tuple, TypeVar
+from typing import Any, Callable, Dict, Generator, Generic, Iterable, List, Mapping, MutableMapping, Sequence, Set, Tuple, TypeVar
 from uuid import UUID
 
 from ruamel.yaml import YAML
 
 _MODULE_NAME = __name__
 
+
 class NoArg(Enum):
     NO_ARG = 0
 
 
 NO_ARG = NoArg.NO_ARG
-
 
 T = TypeVar('T')
 
@@ -129,6 +130,7 @@ def chunks(lst: List[T], items_per_chunk: int) -> Generator[List[T]]:
 def int_commas(value: int) -> str:
     return "{:,}".format(value)
 
+
 def int_prefix(value: int, length: int) -> str:
     return str(value).zfill(length)
 
@@ -142,6 +144,7 @@ def bools2int(bools: List[bool]) -> int:
     """
     if bools is None or len(bools) == 0: return 0
     return sum(2 ** i for i, v in enumerate(reversed(bools)) if v)
+
 
 def int2bools(n, total_length: int):
     """
@@ -342,6 +345,33 @@ def mixin_attrset(self, cls: type, key: str, value) -> Dict[str, Any]:
 
 # region hash
 
+def _hash(hasher: Callable, value: str | bytes, binary=False):
+    if isinstance(value, str):
+        value = value.encode()
+    h = hasher()
+    h.update(value)
+    if binary:
+        return h.digest()
+    else:
+        return h.hexdigest()
+
+
+def hash_md5(value: str | bytes, binary=False) -> str | bytes: return _hash(hasher=hashlib.md5, value=value, binary=binary)
+
+
+def hash_1(value: str | bytes, binary=False) -> str | bytes: return _hash(hasher=hashlib.sha1, value=value, binary=binary)
+
+
+def hash_224(value: str | bytes, binary=False) -> str | bytes: return _hash(hasher=hashlib.sha224, value=value, binary=binary)
+
+
+def hash_256(value: str | bytes, binary=False) -> str | bytes: return _hash(hasher=hashlib.sha256, value=value, binary=binary)
+
+
+def hash_384(value: str | bytes, binary=False) -> str | bytes: return _hash(hasher=hashlib.sha384, value=value, binary=binary)
+
+
+def hash_512(value: str | bytes, binary=False) -> str | bytes: return _hash(hasher=hashlib.sha512, value=value, binary=binary)
 
 
 # endregion hash
@@ -402,8 +432,6 @@ class JsonObjectType(Enum):
     NONE = 5
     DICT = 6
     LIST = 7
-
-
 
 
 class JsonObject:
@@ -651,7 +679,6 @@ class DictStrBase(MutableMapping, metaclass=ABCMeta):
         if data is None: data = {}
         self.update(data, **kwargs)
 
-
     @staticmethod
     @abstractmethod
     def _convert_key(s: str) -> str:
@@ -870,8 +897,11 @@ def profile(output: Callable[[str], Any | None] = print, name: str = None, show_
             result = function(*args, **kwargs)
             p.end()
             return result
+
         return wrapper
+
     return decorator
+
 
 # endregion profiler
 
