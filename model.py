@@ -15,9 +15,6 @@ _factory_datetime = datetime_now_utc
 _factory_uuid = uuid4
 
 
-def _orjson_dumps(v, *, default):
-    # orjson.dumps returns bytes, to match standard json.dumps we need to decode
-    return orjson.dumps(v, default=default).decode()
 
 
 def _create_py_val(field: str, func: Callable):
@@ -34,7 +31,6 @@ def _parse_str(field: str, trim=False, casefold=False) -> classmethod:
         if value is not None and casefold: value = value.casefold()
         # if value is None and check: raise ValueError("value cannot be empty or None" if trim else "value cannot be None")
         return value
-
     return _create_py_val(field, apply)
 
 
@@ -93,12 +89,21 @@ def _parse_list_tags(field: str) -> classmethod:
 def _parse_list_uuid(field: str) -> classmethod:
     # https://github.com/pydantic/pydantic/issues/940#issuecomment-569765091
     def apply(value: List):
-        return list() if value is None else [x for x in sorted({item for item in value if item is not None})]
+        if value is None: return list()
+        duplicate_check = set()
+        new_list = list()
+        for item in value:
+            if item is None: continue
+            if item in duplicate_check: continue
+            duplicate_check.add(item)
+            new_list.append(item)
+        value.clear()
+        value.extend(new_list)
     return _create_py_val(field, apply)
 
 
-def _parse_list_configitem(field: str, check=False) -> classmethod:
-    # TODO: clean config_items
+def _parse_list_config(field: str, check=False) -> classmethod:
+    # TODO: clean config
     return _parse_list(field=field, check=check)
 
 
@@ -113,8 +118,12 @@ def _check_obj(field: str) -> classmethod:
         if value is not None:
             value.check()
         return value
-
     return _create_py_val(field, apply)
+
+
+def _orjson_dumps(v, *, default):
+    # orjson.dumps returns bytes, to match standard json.dumps we need to decode
+    return orjson.dumps(v, default=default).decode()
 
 
 class ModelBase(BaseModel):
@@ -140,6 +149,24 @@ class ModelBase(BaseModel):
         allow_population_by_field_name = True
         # anystr_strip_whitespace = True
 
+class ModelMixinId:
+    id: UUID = Field(default_factory=_factory_uuid)
+
+class ModelMixinVer:
+    ver: UUID = Field(default_factory=_factory_uuid)
+
+class ModelMixinTimestamp:
+    created_on: datetime
+    created_by_user_id: UUID
+    modified_on: datetime
+    modified_by_user_id: UUID
+
+class ModelMixinConfig:
+    config_id: UUID
+
+
+class ModelMixinIsActive:
+    is_active: bool = True
 
 class Tag(ModelBase):
     name: str
@@ -151,22 +178,17 @@ class Tag(ModelBase):
     @classmethod
     def create(cls, name: str, value: str, skip_validation=False):
         if skip_validation:
-            field_data = {"name": name, "value": value}
-            return cls.construct(**field_data)
+            return cls.construct(name=name, value=value)
         else:
             return cls(name=name, value=value)
 
+class ModelMixinTags:
+    tags: List[Tag] = Field(default_factory=_factory_list)
+    _tags: classmethod = _parse_list_tags("tags")
 
-class User(ModelBase):
-    id: UUID = Field(default_factory=_factory_uuid)
-    ver: UUID = Field(default_factory=_factory_uuid)
-    created_on: datetime
-    created_by_user_id: UUID
-    modified_on: datetime
-    modified_by_user_id: UUID
-
+class User(ModelMixinId, ModelMixinVer, ModelMixinTimestamp, ModelMixinTags, ModelMixinIsActive, ModelBase):
     is_admin: bool = False
-    is_active: bool = True
+    is_system: bool = False
 
     email: str | None
     _email: classmethod = _parse_str("email", trim=True)
@@ -180,29 +202,20 @@ class User(ModelBase):
     password_salt: str
     _password_salt: classmethod = _parse_str("password_salt", trim=True)
 
-    tags: List[Tag] = Field(default_factory=_factory_list)
-    _tags: classmethod = _parse_list_tags("tags")
-
     @classmethod
-    def create(cls, username: str, created_by: UUID, password_hash: str, password_salt: str):
+    def create(cls, username: str, created_by_user_id: UUID, password_hash: str, password_salt: str):
         now = _factory_datetime()
         return cls(
-            created_on=now, created_by=created_by,
-            modified_on=now, modified_by=created_by,
+            created_on=now, created_by_user_id=created_by_user_id,
+            modified_on=now, modified_by_user_id=created_by_user_id,
             username=username,
             password_hash=password_hash, password_salt=password_salt,
         )
 
 
 
-class ConfigItem(ModelBase):
-    id: UUID = Field(default_factory=_factory_uuid)
-    ver: UUID = Field(default_factory=_factory_uuid)
-    created_on: datetime
-    created_by_user_id: UUID
-    modified_on: datetime
-    modified_by_user_id: UUID
 
+class Config(ModelMixinId, ModelMixinVer, ModelMixinTimestamp, ModelMixinTags, ModelBase):
     name: str
     _name: classmethod = _parse_str("name", trim=True, casefold=True)
 
@@ -220,76 +233,69 @@ class ConfigItem(ModelBase):
 
 
 
-class Task(ModelBase):
-    id: UUID = Field(default_factory=_factory_uuid)
-    ver: UUID = Field(default_factory=_factory_uuid)
-    created_on: datetime
-    created_by_user_id: UUID
-    modified_on: datetime
-    modified_by_user_id: UUID
-
-    is_active: bool = True
-
-    step: int = -1
-
+class Task(ModelMixinId, ModelMixinVer, ModelMixinTimestamp, ModelMixinTags, ModelMixinConfig, ModelMixinIsActive, ModelBase):
     action: str
     _action: classmethod = _parse_str("name", trim=True, casefold=True)
 
     name: str | None = None
     _name: classmethod = _parse_str("name", trim=True)
 
-    config_ids: List[UUID] = Field(default_factory=_factory_list)
-    _config_ids: classmethod = _parse_list_uuid("config_ids")
-
     @classmethod
-    def create(cls, action: str, created_by: str):
-        now = datetime_now_utc()
+    def create(cls, action: str, created_by_user_id: UUID):
+        now = _factory_datetime()
         return cls(
-            created_on=now, created_by=created_by,
-            modified_on=now, modified_by=created_by,
+            created_on=now, created_by_user_id=created_by_user_id,
+            modified_on=now, modified_by_user_id=created_by_user_id,
             action=action,
         )
 
+class TaskConfig(ModelMixinId, ModelMixinConfig, ModelBase):
+    task_id: UUID
 
-class Schedule(ModelBase):
+    @classmethod
+    def create(cls, config_id: UUID, task_id: UUID):
+        return cls(
+            config_id=config_id,
+            task_id=task_id,
+        )
+
+
+
+class Schedule(ModelMixinIsActive, ModelBase):
     cron: str
     _cron: classmethod = _parse_str("cron", trim=True)
 
-    is_active: bool = True
+    @classmethod
+    def create(cls, cron: str):
+        return cls(
+            cron=cron
+        )
 
 
-class Job(ModelBase):
-    id: UUID = Field(default_factory=_factory_uuid)
-    ver: UUID = Field(default_factory=_factory_uuid)
-    created_on: datetime
-    created_by_user_id: UUID
-    modified_on: datetime
-    modified_by_user_id: UUID
-
-    tags: List[Tag] = Field(default_factory=_factory_list)
-    _tags: classmethod = _parse_list_tags("tags")
-
-    is_active: bool = True
-
+class Job(ModelMixinId, ModelMixinVer, ModelMixinTimestamp, ModelMixinTags, ModelMixinIsActive, ModelBase):
     name: str
     _name: classmethod = _parse_str("name", trim=True)
 
     schedules: List[Schedule] = Field(default_factory=_factory_list)
     _schedules: classmethod = _parse_list_schedule("schedules", check=True)
 
-    config_ids: List[UUID] = Field(default_factory=_factory_list)
-    _config_ids: classmethod = _parse_list_uuid("config_ids")
+    @classmethod
+    def create(cls, name: str, created_by_user_id: UUID):
+        now = _factory_datetime()
+        return cls(
+            created_on=now, created_by_user_id=created_by_user_id,
+            modified_on=now, modified_by_user_id=created_by_user_id,
+            name=name,
+        )
 
-    config_items: List[ConfigItem] = Field(default_factory=_factory_list)
-    _config_items: classmethod = _parse_list_configitem("config_items", check=True)
+class JobConfig(ModelMixinId, ModelMixinConfig, ModelBase):
+    job_id: UUID
 
     @classmethod
-    def create(cls, name: str, created_by: str):
-        now = datetime_now_utc()
+    def create(cls, config_id: UUID, job_id: UUID):
         return cls(
-            created_on=now, created_by=created_by,
-            modified_on=now, modified_by=created_by,
-            name=name,
+            config_id=config_id,
+            job_id=job_id,
         )
 
 
@@ -312,27 +318,52 @@ class ExecutionErrorType(str, Enum):
     def __str__(self): return self.value
 
 
-class TriggerEvent(ModelBase):
-    id: UUID = Field(default_factory=_factory_uuid)
+class TriggerEvent(ModelMixinId, ModelBase):
     job_id: UUID
 
     triggered_on: datetime
     triggered_schedule: Schedule | None = None
     triggered_by_user_id: UUID | None = None
 
+    @classmethod
+    def create(
+            cls,
+            job_id: UUID,
+            triggered_schedule: Schedule | None = None,
+            triggered_by_user_id: UUID | None = None
+    ):
+        if triggered_schedule is None and triggered_by_user_id is None:
+            raise ValueError("values 'triggered_schedule' and 'triggered_by_user_id' cannot both be None")
+        now = _factory_datetime()
+        return cls(
+            job_id=job_id,
+            triggered_on=now,
+            triggered_schedule=triggered_schedule,
+            triggered_by_user_id=triggered_by_user_id,
+        )
 
-class CancellationEvent(ModelBase):
-    id: UUID = Field(default_factory=_factory_uuid)
+
+class CancellationEvent(ModelMixinId, ModelBase):
     execution_id: UUID
 
-    cancelled_on: datetime | None
-    cancelled_by_user_id: UUID | None = None
+    cancelled_on: datetime
+    cancelled_by_user_id: UUID
+
+    @classmethod
+    def create(
+            cls,
+            execution_id: UUID,
+            cancelled_by_user_id: UUID,
+    ):
+        now = _factory_datetime()
+        return cls(
+            execution_id=execution_id,
+            cancelled_on=now,
+            cancelled_by_user_id=cancelled_by_user_id,
+        )
 
 
-class Execution(ModelBase):
-    id: UUID = Field(default_factory=_factory_uuid)
-    ver: UUID = Field(default_factory=_factory_uuid)
-
+class Execution(ModelMixinId, ModelMixinVer, ModelBase):
     state: ExecutionState
     state_task_id: UUID | None = None
 
@@ -357,26 +388,42 @@ class Execution(ModelBase):
     thread_id: UUID | None = None
 
     @classmethod
-    def create(cls, job: Job, trigger_event: TriggerEvent, ):
+    def create(cls, job: Job, trigger_event: TriggerEvent, configs: List[Config]):
         return cls(
             job=job,
             trigger_event=trigger_event,
             state=ExecutionState.TRIGGERED,
+            configs=configs,
         )
 
 
-class Server(ModelBase):
-    id: UUID = Field(default_factory=_factory_uuid)
+class ExecutionServer(ModelMixinId, ModelBase):
     started_on: datetime
     heartbeat_on: datetime
 
+    @classmethod
+    def create(cls):
+        now = _factory_datetime()
+        return cls(
+            started_on=now,
+            heartbeat_on=now,
+        )
 
-class Thread(ModelBase):
-    id: UUID = Field(default_factory=_factory_uuid)
-    server_id: UUID
+class ExecutionServerThread(ModelMixinId, ModelBase):
+    execution_server_id: UUID
     started_on: datetime
     heartbeat_on: datetime
     execution_id: UUID | None
+
+    @classmethod
+    def create(cls, server_id: UUID):
+        now = _factory_datetime()
+        return cls(
+            server_id=server_id,
+            started_on=now,
+            heartbeat_on=now,
+        )
+
 
 
 def main():

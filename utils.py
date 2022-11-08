@@ -134,6 +134,12 @@ def int_commas(value: int) -> str:
 def int_prefix(value: int, length: int) -> str:
     return str(value).zfill(length)
 
+def first_or_none(values: Iterable[T], predicate: Callable[[T], bool]) -> T | None:
+    if values is None: return None
+    for value in values:
+        if predicate(value):
+            return value
+    return None
 
 # region binary
 
