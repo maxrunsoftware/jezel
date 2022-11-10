@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import base64
 import colorsys
+import dataclasses
 import hashlib
+import inspect
 import json as jsn
 import logging
 import random
@@ -28,7 +30,8 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from itertools import chain, combinations
-from typing import Any, Callable, Dict, Generator, Generic, Iterable, List, Mapping, MutableMapping, Sequence, Set, Tuple, TypeVar
+from types import NoneType, UnionType
+from typing import Any, Callable, Dict, Generator, Generic, get_args, get_origin, Iterable, List, Mapping, MutableMapping, NamedTuple, Sequence, Set, Tuple, TypeVar, Union
 from uuid import UUID
 
 from ruamel.yaml import YAML
@@ -134,12 +137,29 @@ def int_commas(value: int) -> str:
 def int_prefix(value: int, length: int) -> str:
     return str(value).zfill(length)
 
-def first_or_none(values: Iterable[T], predicate: Callable[[T], bool]) -> T | None:
+
+def _first(values: Iterable[T], predicate: Callable[[T], bool], allow_empty: bool) -> T | None:
     if values is None: return None
-    for value in values:
-        if predicate(value):
+    if predicate is None:
+        for value in values:
             return value
-    return None
+    else:
+        for value in values:
+            if predicate(value):
+                return value
+    if allow_empty:
+        return None
+    else:
+        raise ValueError("No items in iterable")
+
+
+def first_or_none(values: Iterable[T], predicate: Callable[[T], bool] = None) -> T | None:
+    return _first(values=values, predicate=predicate, allow_empty=True)
+
+
+def first(values: Iterable[T], predicate: Callable[[T], bool] = None) -> T:
+    return _first(values=values, predicate=predicate, allow_empty=False)
+
 
 # region binary
 
@@ -177,8 +197,9 @@ _BOOL_TRUE: Set[str] = {'true', '1', 't', 'y', 'yes'}
 _BOOL_FALSE: Set[str] = {'false', '0', 'f', 'n', 'no'}
 
 
-def bool_parse(value: str | bytes | bool) -> bool:
+def bool_parse(value: Any) -> bool:
     if value is None: raise TypeError("bool_parse() argument must be a string or a bytes-like object, not 'NoneType'")
+    if isinstance(value, bool): return value
     v = trim(str(value))
     if v is not None:
         v = v.lower()
@@ -189,6 +210,7 @@ def bool_parse(value: str | bytes | bool) -> bool:
 
 def bool_parse_none(value: Any | None) -> bool | None:
     if value is None: return None
+    if isinstance(value, bool): return value
     value = trim(str(value))
     if value is None: return None
     return bool_parse(value)
@@ -196,6 +218,7 @@ def bool_parse_none(value: Any | None) -> bool | None:
 
 def int_parse_none(value: Any | None) -> int | None:
     if value is None: return None
+    if isinstance(value, int): return value
     value = trim(str(value))
     if value is None: return None
     return int(value)
@@ -912,6 +935,188 @@ def profile(output: Callable[[str], Any | None] = print, name: str = None, show_
 # endregion profiler
 
 
+# region dataclasses
+
+class DataClassInfoFieldType(NamedTuple):
+    type: type
+    type_original: type
+    name: str
+    is_optional: bool
+    subtypes: Tuple[DataClassInfoFieldType, ...]
+
+    @property
+    def is_union(self):
+        return self._is_type(Union, UnionType)
+
+    @property
+    def is_list(self):
+        return self._is_type(list, List)
+
+    @property
+    def is_tuple(self):
+        return self._is_type(tuple, Tuple)
+
+    @property
+    def is_dict(self):
+        return self._is_type(dict, Dict)
+
+    @property
+    def is_set(self):
+        return self._is_type(set, Set)
+
+    @property
+    def is_any(self):
+        if self._is_type(Any): return True
+        if self.is_union:
+            for st in self.subtypes:
+                if st.is_any: return True
+        return False
+
+    def _is_type(self, *args):
+        for t in args:
+            if self.type == t: return True
+            try:
+                if issubclass(self.type, t): return True
+            except TypeError:  # typing.Union cannot be used with issubclass()
+                pass
+        return False
+
+    @classmethod
+    def create(cls, type: type | str):
+        if isinstance(type, str): type = eval(type)
+        type_original = type
+        type_origin = get_origin(type)
+        is_optional = False
+        subtypes = list()
+        if type_origin is None:
+            mytype = type
+        else:
+            if isinstance(type_origin, str): type_origin = eval(type)
+            mytype = type_origin
+            for subtype in get_args(type):
+                if subtype == NoneType:
+                    is_optional = True
+                else:
+                    subtypes.append(subtype)
+
+        subtypes_list = [cls.create(t) for t in subtypes]
+        if (mytype == Union or mytype == UnionType) and len(subtypes_list) == 1:
+            subtype = first(subtypes_list)
+            mytype = subtype.type
+            name = subtype.name
+            subtypes_tuple = subtype.subtypes
+        else:
+            name = mytype.__name__ if hasattr(mytype, "__name__") else mytype if isinstance(mytype, str) else str(mytype)
+            subtypes_tuple = tuple(subtypes_list)
+
+        if mytype == UnionType and name == "UnionType": name = "Union"  # No idea why some are Union and others are UnionType, probably eval
+
+        return cls(
+            type=mytype,
+            type_original=type_original,
+            name=name,
+            is_optional=is_optional,
+            subtypes=subtypes_tuple,
+        )
+
+    def __str__(self):
+        s = ""
+        if not self.is_union: s += self.name
+
+        if len(self.subtypes) > 0:
+            if self.is_union:
+                s += " | ".join([str(x) for x in self.subtypes])
+            else:
+                s += "["
+                s += ", ".join([str(x) for x in self.subtypes])
+                if s.endswith("]") or s.endswith("]?"): s += " "
+                s += "]"
+        if self.is_optional: s += "?"
+        return s
+
+
+class DataClassInfoField(NamedTuple):
+    field: dataclasses.Field
+    name: str
+    type: DataClassInfoFieldType
+
+    @classmethod
+    def create(cls, field: dataclasses.Field):
+        return cls(
+            field=field,
+            name=field.name,
+            type=DataClassInfoFieldType.create(field.type),
+        )
+
+    def __str__(self):
+        return f"{self.name}: {self.type}"
+
+
+class DataClassInfo:
+    def __init__(self, cls: Any):
+        if not inspect.isclass(cls): raise ValueError(f"{cls} is not a class")
+        if not self.is_dataclass(cls): raise ValueError(f"Class '{cls.__name__}' is not a dataclass")
+        self._type = cls
+        self._name = trim(cls.__name__)
+        self._module = trim(cls.__module__)
+        self._fields: Dict[str, DataClassInfoField] = dict()
+        for f in dataclasses.fields(cls):
+            self._fields[f.name] = DataClassInfoField.create(f)
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def module(self):
+        return self._module
+
+    @property
+    def fields(self) -> Mapping[str, DataClassInfoField]:
+        return self._fields
+
+    @staticmethod
+    def is_dataclass(cls: type):
+        if type is None: return False
+        if not inspect.isclass(cls): return False
+        for member_name in dir(cls):
+            if "_dataclass_".casefold() in member_name.casefold(): return True
+        return False
+
+    def __str__(self):
+        prefix = ".".join(s for s in [self.module, self.name] if s is not None)
+        suffix = ", ".join(str(f) for f in self.fields.values())
+        suffix = coalesce(trim(suffix), "")
+        return prefix + "[" + suffix + "]"
+
+    @property
+    def str_debug(self):
+        s = ".".join(s for s in [self.module, self.name] if s is not None)
+        if len(self.fields) == 0: return s
+        for f in self.fields.values():
+            s += f"\n  {f}"
+        return s
+
+
+def dataclass_info(cls) -> DataClassInfo:
+    return DataClassInfo(cls)
+
+def dataclass_infos_in_module(module_name: str) -> [DataClassInfo]:
+    result = []
+    tpls = inspect.getmembers(sys.modules[module_name])
+    for tpl in tpls:
+        if not DataClassInfo.is_dataclass(tpl[1]): continue
+        dci = DataClassInfo(tpl[1])
+        result.append(dci)
+    return result
+
+
+# endregion dataclasses
+
 class Color:
     def __init__(self):
         self._r = 0
@@ -1006,3 +1211,11 @@ class Color:
         h = value.lstrip('#')
         self._set_rgb(tuple(int(h[i:i + 2], 16) for i in (0, 2, 4)))
         self._calc_hsv()
+
+
+def main():
+    pass
+
+
+if __name__ == "__main__":
+    main()

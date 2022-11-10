@@ -6,9 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="f29751e5-0a3a-43e0-8578-d0c22e446a3c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model_database.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -64,13 +61,14 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "/Users/user/dev/github/maxrunsoftware/jezel/static/js",
+    "last_opened_file_path": "/Users/user/dev/github/maxrunsoftware/jezel",
     "run.code.analysis.last.selected.profile": "pProject Default",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/static/js" />
       <recent name="$PROJECT_DIR$/templates" />
     </key>
@@ -78,7 +76,7 @@
       <recent name="$PROJECT_DIR$/app" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.models2">
+  <component name="RunManager" selected="Python.database_object3">
     <configuration name="database" type="PythonConfigurationType" factoryName="Python">
       <module name="jezel" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -93,6 +91,28 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/database.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="database_object3" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="jezel" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/database_object3.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -251,6 +271,7 @@
     <list>
       <item itemvalue="Flask server.jezel" />
       <item itemvalue="Python.database" />
+      <item itemvalue="Python.database_object3" />
       <item itemvalue="Python.models2" />
       <item itemvalue="Python tests.test_database_object" />
       <item itemvalue="Python tests.test_database" />
@@ -260,11 +281,11 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.database_object3" />
         <item itemvalue="Python.models2" />
         <item itemvalue="Python tests.Python tests in test_database_object.py" />
         <item itemvalue="Python tests.Python tests in test_database.py" />
         <item itemvalue="Python tests.Python tests for tests.test_database" />
-        <item itemvalue="Python tests.Python tests for tests.database_test.TestTableBase" />
       </list>
     </recent_temporary>
   </component>
@@ -280,7 +301,7 @@
       <workItem from="1666269076732" duration="35000" />
       <workItem from="1666269444961" duration="574000" />
       <workItem from="1666273466881" duration="8311000" />
-      <workItem from="1666305223408" duration="528520000" />
+      <workItem from="1666305223408" duration="577011000" />
     </task>
     <servers />
   </component>
@@ -302,6 +323,7 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/jezel$db_object.coverage" NAME="database_object3 Coverage Results" MODIFIED="1667984370187" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/jezel$database.coverage" NAME="database Coverage Results" MODIFIED="1667238773873" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/jezel$jezel.coverage" NAME="jezel Coverage Results" MODIFIED="1666850838654" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/jezel$.coverage" NAME=" Coverage Results" MODIFIED="1667453006553" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
