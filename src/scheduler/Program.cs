@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace MaxRunSoftware.Jezel.Common;
+namespace MaxRunSoftware.Jezel.Scheduler;
 
-public class Class1 { }
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        Console.WriteLine("Hello, World!");
+    }
+}
