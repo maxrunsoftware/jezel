@@ -28,3 +28,4 @@ global using System.Threading;
 global using System.Threading.Tasks;
 global using Microsoft.Extensions.Logging;
 global using PureAttribute = System.Diagnostics.Contracts.PureAttribute;
+global using MaxRunSoftware.Utilities.Common;
