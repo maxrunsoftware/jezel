@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Unit tests for Scheduler</Title>
+        <Description>Unit tests for Scheduler</Description>
+        <Summary>Unit tests for Scheduler</Summary>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\common\Common.Tests.csproj" />
+        <ProjectReference Include="$(SolutionDir)src\scheduler\Scheduler.csproj" />
+    </ItemGroup>
+</Project>

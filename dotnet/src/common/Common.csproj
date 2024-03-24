@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Title>Jezel Job Scheduler Common Functions</Title>
+        <Description>Jezel Job Scheduler Common Functions for Jezel Scheduler</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MaxRunSoftware.Utilities.Common" Version="2.0.0-beta-20240316-230608" />
+      <PackageReference Include="MaxRunSoftware.Utilities.Data" Version="2.0.0-beta-20240316-230608" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    </ItemGroup>
+
+</Project>

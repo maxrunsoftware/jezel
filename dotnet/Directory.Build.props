@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+    <PropertyGroup>
+
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>disable</ImplicitUsings>
+
+        <Authors>Max Run Software</Authors>
+        <Owners>$(Authors)</Owners>
+        <Copyright>(c) Max Run Software $([System.DateTime]::UtcNow.ToString(yyyy))</Copyright>
+
+        <VersionPrefix>1.0.0</VersionPrefix>
+
+        <PackageId>$(MSBuildProjectName)</PackageId>
+        <PackageTags>Utility</PackageTags>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+
+        <PackageProjectUrl>https://github.com/maxrunsoftware/jezel</PackageProjectUrl>
+
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="$(SolutionDir)..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(SolutionDir)..\README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
+    
+</Project>

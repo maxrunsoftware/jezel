@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Unit tests for Runner</Title>
+        <Description>Unit tests for Runner</Description>
+        <Summary>Unit tests for Runner</Summary>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="$(SolutionDir)src\common\Common.csproj" />
+    </ItemGroup>
+</Project>

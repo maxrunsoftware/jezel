@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaxRunSoftware.Jezel.Common", "src\common\Common.csproj", "{65848AB3-FB55-496D-981C-BF6DAB75A2BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaxRunSoftware.Jezel.Common.Tests", "tests\common\Common.Tests.csproj", "{05258FF1-423E-473C-BE4D-B3FF88A3BD1E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaxRunSoftware.Jezel.Scheduler", "src\scheduler\Scheduler.csproj", "{6E1BC46D-79D0-458E-8506-375BB99D7210}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaxRunSoftware.Jezel.Scheduler.Tests", "tests\scheduler\Scheduler.Tests.csproj", "{64D286D2-94D6-4D97-8DD8-A2437F40623B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaxRunSoftware.Jezel.Runner", "src\runner\Runner.csproj", "{8A731794-5673-4C2D-B6BE-C02B4E5891A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaxRunSoftware.Jezel.Runner.Tests", "tests\runner\Runner.Tests.csproj", "{CA978FB7-8947-4D32-9446-79EC9DFF765F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{65848AB3-FB55-496D-981C-BF6DAB75A2BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65848AB3-FB55-496D-981C-BF6DAB75A2BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65848AB3-FB55-496D-981C-BF6DAB75A2BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65848AB3-FB55-496D-981C-BF6DAB75A2BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05258FF1-423E-473C-BE4D-B3FF88A3BD1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05258FF1-423E-473C-BE4D-B3FF88A3BD1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05258FF1-423E-473C-BE4D-B3FF88A3BD1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05258FF1-423E-473C-BE4D-B3FF88A3BD1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E1BC46D-79D0-458E-8506-375BB99D7210}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E1BC46D-79D0-458E-8506-375BB99D7210}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E1BC46D-79D0-458E-8506-375BB99D7210}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E1BC46D-79D0-458E-8506-375BB99D7210}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64D286D2-94D6-4D97-8DD8-A2437F40623B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64D286D2-94D6-4D97-8DD8-A2437F40623B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64D286D2-94D6-4D97-8DD8-A2437F40623B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64D286D2-94D6-4D97-8DD8-A2437F40623B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A731794-5673-4C2D-B6BE-C02B4E5891A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A731794-5673-4C2D-B6BE-C02B4E5891A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A731794-5673-4C2D-B6BE-C02B4E5891A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A731794-5673-4C2D-B6BE-C02B4E5891A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA978FB7-8947-4D32-9446-79EC9DFF765F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA978FB7-8947-4D32-9446-79EC9DFF765F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA978FB7-8947-4D32-9446-79EC9DFF765F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA978FB7-8947-4D32-9446-79EC9DFF765F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

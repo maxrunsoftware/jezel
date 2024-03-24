@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+    <ItemGroup>
+        <Compile Include="$(SolutionDir)src/*.cs" />
+        <Compile Include="$(SolutionDir)tests/*.cs" />
+    </ItemGroup>
+</Project>
