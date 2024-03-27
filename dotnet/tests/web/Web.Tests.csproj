@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Unit tests for Web</Title>
+        <Description>Unit tests for Web</Description>
+        <Summary>Unit tests for Web</Summary>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\common\Common.Tests.csproj" />
+        <ProjectReference Include="$(SolutionDir)src\web\Web.csproj" />
+    </ItemGroup>
+</Project>

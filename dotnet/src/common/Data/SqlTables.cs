@@ -1,0 +1,58 @@
+// Copyright (c) 2024 Max Run Software (dev@maxrunsoftware.com)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+namespace MaxRunSoftware.Jezel.Common.Data;
+
+public class SqlTables
+{
+    public string CreateTableJob =>
+        """
+        CREATE TABLE jezel_job (
+            id          uuid NOT NULL PRIMARY KEY,
+            name        text NULL,
+            description text NULL,
+            CONSTRAINT jezel_job_id PRIMARY KEY(id)
+        );
+        """;
+
+    public string CreateTableJobSchedule =>
+        """
+        CREATE TABLE jezel_job_schedule (
+            id          uuid NOT NULL,
+            job_id      uuid NOT NULL,
+            cron        text NOT NULL,
+            CONSTRAINT jezel_job_schedule_id PRIMARY KEY(id)
+        );
+        """;
+
+    public string CreateTableJobSchedule_FK1 =>
+        """
+        ALTER TABLE jezel_job_schedule 
+            ADD CONSTRAINT jezel_job_schedule_job_id_fk_job_id
+            FOREIGN KEY (job_id) 
+            REFERENCES jezel_job (id);
+        """;
+
+    public string CreateTableJobAction =>
+        """
+        CREATE TABLE jezel_job_schedule (
+            id          uuid NOT NULL,
+            job_id      uuid NOT NULL,
+            cron        text NOT NULL,
+            CONSTRAINT jezel_job_schedule_id PRIMARY KEY(id)
+        );
+        """;
+
+
+}

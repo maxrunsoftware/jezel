@@ -4,8 +4,6 @@
         <Title>Unit tests for Scheduler</Title>
         <Description>Unit tests for Scheduler</Description>
         <Summary>Unit tests for Scheduler</Summary>
-        <IsPackable>false</IsPackable>
-        <IsTestProject>true</IsTestProject>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\common\Common.Tests.csproj" />

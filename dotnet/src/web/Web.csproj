@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Title>Jezel Job Scheduler Web Interface</Title>
+        <Description>Jezel Job Scheduler Web Interface for Jezel Scheduler</Description>
+        <OutputType>Exe</OutputType>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\common\Common.csproj" />
+    </ItemGroup>
+
+</Project>

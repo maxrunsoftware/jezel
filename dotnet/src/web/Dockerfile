@@ -19,17 +19,17 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["runner/Runner.csproj", "runner/"]
-RUN dotnet restore "runner/Runner.csproj"
+COPY ["web/Web.csproj", "web/"]
+RUN dotnet restore "web/Web.csproj"
 COPY . .
-WORKDIR "/src/runner"
-RUN dotnet build "Runner.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/web"
+RUN dotnet build "Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "Runner.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Runner.dll"]
+ENTRYPOINT ["dotnet", "Web.dll"]

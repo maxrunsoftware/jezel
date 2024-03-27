@@ -4,8 +4,6 @@
         <Title>Unit tests for Runner</Title>
         <Description>Unit tests for Runner</Description>
         <Summary>Unit tests for Runner</Summary>
-        <IsPackable>false</IsPackable>
-        <IsTestProject>true</IsTestProject>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="$(SolutionDir)src\common\Common.csproj" />
