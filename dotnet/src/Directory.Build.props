@@ -28,7 +28,7 @@
 
     <ItemGroup>
     
-      <None Include="$(SolutionDir)src\appsettings.json">
+      <None Include="$(SolutionDir)src\appsettings*.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>
