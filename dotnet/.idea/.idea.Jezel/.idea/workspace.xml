@@ -10,14 +10,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="30accb57-972f-4400-ae9f-1b26e05ce7a9" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Jezel/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Jezel/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Jezel.sln" beforeDir="false" afterPath="$PROJECT_DIR$/Jezel.sln" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/Common.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/Common.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/runner/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/src/runner/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Directory.Build.props" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Directory.Build.props" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/common/Common.Tests.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/tests/common/Common.Tests.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/runner/Runner.Tests.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/tests/runner/Runner.Tests.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/scheduler/Scheduler.Tests.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/tests/scheduler/Scheduler.Tests.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/Data/SqlTables.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/runner/Runner.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/src/runner/Runner.csproj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -151,6 +147,8 @@
       <workItem from="1711317149042" duration="2420000" />
       <workItem from="1711578733628" duration="209000" />
       <workItem from="1711579505667" duration="209000" />
+      <workItem from="1711579737623" duration="1027000" />
+      <workItem from="1711582921944" duration="531000" />
     </task>
     <servers />
   </component>
