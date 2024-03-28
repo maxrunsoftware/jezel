@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2024 Max Run Software (dev@maxrunsoftware.com)
+// Copyright (c) 2024 Max Run Software (dev@maxrunsoftware.com)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,4 +14,17 @@
 
 namespace MaxRunSoftware.Jezel.Common;
 
-public class Class1 { }
+public class Config
+{
+    public static Config Instance { get; } = new();
+
+    public DirectoryInfo WorkingDirectory { get; set; } = new DirectoryInfo(Path.GetTempPath()).CreateSubdirectory("jezel");
+
+    public FileInfo LiteDbFile => new(Path.Combine(WorkingDirectory.FullName, "jezel_litedb.db"));
+    public string ConnectionStringLiteDb => $"Filename={LiteDbFile.FullName};Connection=shared";
+
+    public ushort PortHttpWeb => 8741;
+    public ushort PortHttpRunner => 8742;
+    public ushort PortHttpScheduler => 8743;
+
+}
